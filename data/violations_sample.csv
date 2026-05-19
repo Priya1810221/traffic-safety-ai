@@ -1,0 +1,9 @@
+violation_id,employee_id,employee_name,violation_type,location,severity,timestamp,description,manager_email
+VIO-20260519093000-1001,EMP001,Rajesh Kumar,No Left Check Before Crossing,Main Gate Zebra Crossing,Low,2026-05-19T09:30:00,Employee did not look to the left before crossing the road.,manager1@company.com
+VIO-20260519093100-1002,EMP002,Priya Singh,Crossed Road Without Zebra Crossing,Office Building Front Road,High,2026-05-19T09:31:00,Employee crossed the road at a location other than designated zebra crossing.,manager2@company.com
+VIO-20260519093200-1003,EMP003,Amit Patel,Not Following Signal at Zebra Crossing,Parking Lot Exit,High,2026-05-19T09:32:00,Employee crossed during red signal at zebra crossing.,manager3@company.com
+VIO-20260519093300-1004,EMP004,Neha Gupta,Jaywalking,Metro Station Entrance,High,2026-05-19T09:33:00,Employee crossed the road illegally at an unauthorized location.,manager4@company.com
+VIO-20260519093400-1005,EMP005,Vikram Desai,Running Across Road,Shopping Mall Crossing,Medium,2026-05-19T09:34:00,Employee ran across the road instead of walking safely.,manager5@company.com
+VIO-20260519093500-1006,EMP006,Anjali Verma,Distracted Crossing (Using Phone),Highway Intersection,Medium,2026-05-19T09:35:00,Employee was using phone/distracted while crossing the road.,manager6@company.com
+VIO-20260519093600-1007,EMP007,Rohan Sharma,No Right Check Before Crossing,Street Market Crossing,Low,2026-05-19T09:36:00,Employee did not look to the right before crossing the road.,manager1@company.com
+VIO-20260519093700-1008,EMP008,Divya Kapoor,No Front Check Before Crossing,Bus Stop Area,Low,2026-05-19T09:37:00,Employee did not check for incoming traffic from the front.,manager3@company.com

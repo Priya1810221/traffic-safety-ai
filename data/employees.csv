@@ -1,0 +1,9 @@
+employee_id,employee_name,department,manager_email,phone_number,date_of_joining
+EMP001,Rajesh Kumar,Sales,manager1@company.com,9876543210,2022-01-15
+EMP002,Priya Singh,HR,manager2@company.com,9876543211,2021-06-20
+EMP003,Amit Patel,IT,manager3@company.com,9876543212,2023-02-10
+EMP004,Neha Gupta,Marketing,manager4@company.com,9876543213,2022-09-05
+EMP005,Vikram Desai,Finance,manager5@company.com,9876543214,2020-11-30
+EMP006,Anjali Verma,Operations,manager6@company.com,9876543215,2023-03-18
+EMP007,Rohan Sharma,Sales,manager1@company.com,9876543216,2022-07-22
+EMP008,Divya Kapoor,IT,manager3@company.com,9876543217,2023-01-08
