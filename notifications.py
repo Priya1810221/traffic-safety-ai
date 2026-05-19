@@ -2,28 +2,25 @@
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from datetime import datetime
-import logging
 import os
 from dotenv import load_dotenv
+import logging
+from datetime import datetime
 
 load_dotenv()
-
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class EmailNotifier:
-    """Handles email notifications for traffic violations"""
+    """Handles email notifications for traffic safety violations"""
     
     def __init__(self):
-        # Email configuration (using environment variables)
+        self.smtp_server = os.getenv('SMTP_SERVER', 'smtp.gmail.com')
+        self.smtp_port = int(os.getenv('SMTP_PORT', 587))
         self.sender_email = os.getenv('SENDER_EMAIL', 'your_email@gmail.com')
         self.sender_password = os.getenv('SENDER_PASSWORD', 'your_app_password')
-        self.smtp_server = os.getenv('SMTP_SERVER', 'smtp.gmail.com')
-        self.smtp_port = int(os.getenv('SMTP_PORT', '587'))
-        
+    
     def send_email(self, to_email, subject, body):
-        """Send email notification to manager"""
+        """Send email notification"""
         try:
             # Create message
             message = MIMEMultipart('alternative')
@@ -31,16 +28,17 @@ class EmailNotifier:
             message['From'] = self.sender_email
             message['To'] = to_email
             
-            # Create HTML version of the email
-            html_body = self._create_html_body(body)
-            
             # Attach plain text and HTML versions
-            message.attach(MIMEText(body, 'plain'))
-            message.attach(MIMEText(html_body, 'html'))
+            text_part = MIMEText(body, 'plain')
+            message.attach(text_part)
+            
+            html_body = self._create_html_body(body)
+            html_part = MIMEText(html_body, 'html')
+            message.attach(html_part)
             
             # Send email
             with smtplib.SMTP(self.smtp_server, self.smtp_port) as server:
-                server.starttls()  # Secure connection
+                server.starttls()
                 server.login(self.sender_email, self.sender_password)
                 server.sendmail(self.sender_email, to_email, message.as_string())
             
@@ -48,100 +46,99 @@ class EmailNotifier:
             return True
             
         except smtplib.SMTPAuthenticationError:
-            logger.error("SMTP Authentication failed. Check email credentials.")
+            logger.error("SMTP Authentication failed. Check email and password.")
             return False
         except smtplib.SMTPException as e:
             logger.error(f"SMTP error occurred: {str(e)}")
             return False
         except Exception as e:
-            logger.error(f"Failed to send email: {str(e)}")
+            logger.error(f"Error sending email: {str(e)}")
             return False
     
     def _create_html_body(self, text_body):
-        """Create HTML formatted email body"""
+        """Convert text body to HTML format"""
         html = f"""
         <html>
             <head>
                 <style>
                     body {{
                         font-family: Arial, sans-serif;
-                        color: #333;
+                        background-color: #f4f4f4;
                     }}
-                    .alert-box {{
-                        background-color: #fff3cd;
-                        border: 1px solid #ffc107;
-                        padding: 15px;
-                        border-radius: 5px;
-                        margin-bottom: 20px;
+                    .container {{
+                        max-width: 600px;
+                        margin: 0 auto;
+                        background-color: white;
+                        padding: 20px;
+                        border-radius: 8px;
+                        box-shadow: 0 0 10px rgba(0,0,0,0.1);
                     }}
-                    .violation-details {{
-                        background-color: #f8f9fa;
-                        padding: 15px;
-                        border-left: 4px solid #dc3545;
-                        margin: 10px 0;
+                    .header {{
+                        background-color: #d32f2f;
+                        color: white;
+                        padding: 20px;
+                        border-radius: 8px 8px 0 0;
+                        text-align: center;
                     }}
-                    .high-severity {{
-                        color: #dc3545;
-                        font-weight: bold;
+                    .content {{
+                        padding: 20px;
+                        line-height: 1.6;
                     }}
-                    .medium-severity {{
-                        color: #ffc107;
-                        font-weight: bold;
-                    }}
-                    .low-severity {{
-                        color: #28a745;
-                        font-weight: bold;
-                    }}
-                    footer {{
+                    .footer {{
+                        background-color: #f9f9f9;
+                        padding: 10px;
+                        text-align: center;
                         font-size: 12px;
                         color: #666;
-                        margin-top: 20px;
-                        padding-top: 10px;
-                        border-top: 1px solid #ddd;
                     }}
                 </style>
             </head>
             <body>
-                <div class="alert-box">
-                    <h2>⚠️ Traffic Safety Alert</h2>
-                    <p>A traffic rule violation has been detected and reported.</p>
+                <div class="container">
+                    <div class="header">
+                        <h2>⚠️ Traffic Safety Alert</h2>
+                    </div>
+                    <div class="content">
+                        <pre style="white-space: pre-wrap; word-wrap: break-word;">{text_body}</pre>
+                    </div>
+                    <div class="footer">
+                        <p>This is an automated notification from Traffic Safety AI System</p>
+                        <p>Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
+                    </div>
                 </div>
-                <div class="violation-details">
-                    <pre>{text_body}</pre>
-                </div>
-                <footer>
-                    <p>This is an automated notification from the Traffic Safety AI System.</p>
-                    <p>Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
-                </footer>
             </body>
         </html>
         """
         return html
     
-    def send_daily_summary(self, to_email, violations_summary):
-        """Send daily summary of violations to manager"""
+    def send_daily_summary(self, manager_email, violations_data):
+        """Send daily summary of violations"""
         try:
-            subject = f"Daily Traffic Safety Report - {datetime.now().strftime('%Y-%m-%d')}"
+            total_violations = len(violations_data)
+            high_severity = len([v for v in violations_data if v.get('severity') == 'High'])
+            medium_severity = len([v for v in violations_data if v.get('severity') == 'Medium'])
+            low_severity = len([v for v in violations_data if v.get('severity') == 'Low'])
+            
+            subject = f"Daily Traffic Safety Summary - {datetime.now().strftime('%Y-%m-%d')}"
+            
             body = f"""
 Dear Manager,
 
 Here is your daily traffic safety summary:
 
-Total Violations Today: {violations_summary['total']}
-High Severity: {violations_summary['high']}
-Medium Severity: {violations_summary['medium']}
-Low Severity: {violations_summary['low']}
+Total Violations: {total_violations}
+- High Severity: {high_severity}
+- Medium Severity: {medium_severity}
+- Low Severity: {low_severity}
 
-Most Common Violation: {violations_summary['most_common']}
-
-Please review and take necessary actions.
+Please review the violations and take necessary action.
 
 Best regards,
 Traffic Safety AI System
             """
             
-            return self.send_email(to_email, subject, body)
+            return self.send_email(manager_email, subject, body)
             
         except Exception as e:
-            logger.error(f"Failed to send daily summary: {str(e)}")
+            logger.error(f"Error sending daily summary: {str(e)}")
             return False

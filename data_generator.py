@@ -1,156 +1,153 @@
 # data_generator.py
 import random
 from datetime import datetime, timedelta
+import csv
 import json
+import logging
+
+logger = logging.getLogger(__name__)
 
 class ViolationDataGenerator:
     """Generates random traffic violation data for testing and simulation"""
     
-    def __init__(self):
-        # Sample employee data
-        self.employees = [
-            {'id': 'EMP001', 'name': 'Rajesh Kumar', 'department': 'Sales'},
-            {'id': 'EMP002', 'name': 'Priya Singh', 'department': 'HR'},
-            {'id': 'EMP003', 'name': 'Amit Patel', 'department': 'IT'},
-            {'id': 'EMP004', 'name': 'Neha Gupta', 'department': 'Marketing'},
-            {'id': 'EMP005', 'name': 'Vikram Desai', 'department': 'Finance'},
-            {'id': 'EMP006', 'name': 'Anjali Verma', 'department': 'Operations'},
-            {'id': 'EMP007', 'name': 'Rohan Sharma', 'department': 'Sales'},
-            {'id': 'EMP008', 'name': 'Divya Kapoor', 'department': 'IT'},
-        ]
-        
-        # Traffic rule violations
-        self.violation_types = [
-            'No Left Check Before Crossing',
-            'No Right Check Before Crossing',
-            'No Front Check Before Crossing',
-            'Crossed Road Without Zebra Crossing',
-            'Not Following Signal at Zebra Crossing',
-            'Jaywalking',
-            'Running Across Road',
-            'Distracted Crossing (Using Phone)'
-        ]
-        
-        # Common locations
-        self.locations = [
-            'Main Gate Zebra Crossing',
-            'Office Building Front Road',
-            'Parking Lot Exit',
-            'Metro Station Entrance',
-            'Shopping Mall Crossing',
-            'Highway Intersection',
-            'Street Market Crossing',
-            'Bus Stop Area',
-            'Railway Station Crossing',
-            'Park Entrance'
-        ]
-        
-        # Severity levels
-        self.severity_levels = ['Low', 'Medium', 'High']
-        
-        # Descriptions for violations
-        self.violation_descriptions = {
-            'No Left Check Before Crossing': 'Employee did not look to the left before crossing the road.',
-            'No Right Check Before Crossing': 'Employee did not look to the right before crossing the road.',
-            'No Front Check Before Crossing': 'Employee did not check for incoming traffic from the front.',
-            'Crossed Road Without Zebra Crossing': 'Employee crossed the road at a location other than designated zebra crossing.',
-            'Not Following Signal at Zebra Crossing': 'Employee crossed during red signal at zebra crossing.',
-            'Jaywalking': 'Employee crossed the road illegally at an unauthorized location.',
-            'Running Across Road': 'Employee ran across the road instead of walking safely.',
-            'Distracted Crossing (Using Phone)': 'Employee was using phone/distracted while crossing the road.'
-        }
+    VIOLATION_TYPES = [
+        'No Left Check Before Crossing',
+        'No Right Check Before Crossing',
+        'No Front Check Before Crossing',
+        'Crossed Road Without Zebra Crossing',
+        'Not Following Signal at Zebra Crossing',
+        'Jaywalking',
+        'Running Across Road',
+        'Distracted Crossing (Using Phone)'
+    ]
     
-    def generate_violation(self, employee_id=None):
-        """Generate a random violation with 30% probability"""
-        # 70% chance of no violation, 30% chance of violation
-        if random.random() > 0.3:
+    LOCATIONS = [
+        'Main Gate Zebra Crossing',
+        'Office Building Front Road',
+        'Parking Lot Exit',
+        'Metro Station Entrance',
+        'Shopping Mall Crossing',
+        'Highway Intersection',
+        'Street Market Crossing',
+        'Bus Stop Area',
+        'Traffic Signal Junction',
+        'Pedestrian Overpass'
+    ]
+    
+    SEVERITY_LEVELS = ['Low', 'Medium', 'High']
+    
+    def __init__(self):
+        self.violation_counter = 0
+        self.employees = self._load_employees()
+    
+    def _load_employees(self):
+        """Load employee data from CSV"""
+        employees = []
+        try:
+            with open('data/employees.csv', 'r') as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    employees.append(row)
+            logger.info(f"Loaded {len(employees)} employees from CSV")
+        except FileNotFoundError:
+            logger.warning("employees.csv not found. Using default sample data.")
+            employees = self._get_sample_employees()
+        return employees
+    
+    def _get_sample_employees(self):
+        """Get sample employee data"""
+        return [
+            {'employee_id': 'EMP001', 'employee_name': 'Rajesh Kumar', 'manager_email': 'manager1@company.com'},
+            {'employee_id': 'EMP002', 'employee_name': 'Priya Singh', 'manager_email': 'manager2@company.com'},
+            {'employee_id': 'EMP003', 'employee_name': 'Amit Patel', 'manager_email': 'manager3@company.com'},
+            {'employee_id': 'EMP004', 'employee_name': 'Neha Gupta', 'manager_email': 'manager4@company.com'},
+            {'employee_id': 'EMP005', 'employee_name': 'Vikram Desai', 'manager_email': 'manager5@company.com'},
+        ]
+    
+    def generate_violation(self, employee_id, probability=0.3):
+        """Generate a random violation with given probability"""
+        # Random probability to generate violation
+        if random.random() > probability:
             return None
         
-        # Select random employee if not specified
-        if employee_id:
-            employee = next((e for e in self.employees if e['id'] == employee_id), None)
-            if not employee:
-                employee = random.choice(self.employees)
-        else:
-            employee = random.choice(self.employees)
+        # Find employee details
+        employee = next((e for e in self.employees if e.get('employee_id') == employee_id), None)
+        if not employee:
+            logger.warning(f"Employee {employee_id} not found")
+            return None
         
-        # Select random violation type
-        violation_type = random.choice(self.violation_types)
+        self.violation_counter += 1
+        timestamp = datetime.now() - timedelta(seconds=random.randint(0, 3600))
         
-        # Determine severity based on violation type
-        if 'Without Zebra' in violation_type or 'Signal' in violation_type or 'Jaywalking' in violation_type:
-            severity = random.choice(['Medium', 'High'])
-        elif 'Running' in violation_type or 'Distracted' in violation_type:
-            severity = random.choice(['Low', 'Medium'])
-        else:
-            severity = 'Low'
-        
-        # Create violation record
         violation = {
-            'employee_id': employee['id'],
-            'employee_name': employee['name'],
-            'department': employee['department'],
-            'violation_type': violation_type,
-            'location': random.choice(self.locations),
-            'severity': severity,
-            'timestamp': datetime.now().isoformat(),
-            'description': self.violation_descriptions[violation_type],
-            'violation_id': f"VIO-{datetime.now().strftime('%Y%m%d%H%M%S')}-{random.randint(1000, 9999)}"
+            'violation_id': f"VIO-{timestamp.strftime('%Y%m%d%H%M%S')}-{self.violation_counter:04d}",
+            'employee_id': employee_id,
+            'employee_name': employee.get('employee_name'),
+            'violation_type': random.choice(self.VIOLATION_TYPES),
+            'location': random.choice(self.LOCATIONS),
+            'severity': random.choice(self.SEVERITY_LEVELS),
+            'timestamp': timestamp.isoformat(),
+            'description': self._generate_description(),
+            'manager_email': employee.get('manager_email')
         }
         
+        logger.info(f"Generated violation: {violation['violation_id']}")
         return violation
     
-    def generate_batch_violations(self, count=10):
-        """Generate multiple violations for batch testing"""
+    def _generate_description(self):
+        """Generate description for violation"""
+        descriptions = [
+            'Employee crossed the road without looking both ways.',
+            'Employee crossed at unauthorized location.',
+            'Employee did not wait for green signal.',
+            'Employee was distracted while crossing.',
+            'Employee ran across the road unsafely.',
+            'Employee ignored zebra crossing signals.',
+        ]
+        return random.choice(descriptions)
+    
+    def generate_batch_violations(self, num_violations=10):
+        """Generate multiple random violations for testing"""
         violations = []
-        for i in range(count):
-            violation = self.generate_violation()
+        for _ in range(num_violations):
+            employee = random.choice(self.employees)
+            violation = self.generate_violation(employee.get('employee_id'))
             if violation:
                 violations.append(violation)
         return violations
     
-    def get_all_employees(self):
-        """Return list of all employees for reference"""
-        return self.employees
-    
-    def get_employee_by_id(self, employee_id):
-        """Get employee details by ID"""
-        return next((e for e in self.employees if e['id'] == employee_id), None)
-    
-    def export_violations_to_json(self, violations, filename='violations.json'):
+    def export_violations_to_json(self, violations, filename='violations_export.json'):
         """Export violations to JSON file"""
         try:
             with open(filename, 'w') as f:
                 json.dump(violations, f, indent=2)
+            logger.info(f"Exported {len(violations)} violations to {filename}")
             return True
         except Exception as e:
-            print(f"Error exporting violations: {str(e)}")
+            logger.error(f"Error exporting violations: {str(e)}")
             return False
-
-
-# Test the data generator
-if __name__ == '__main__':
-    generator = ViolationDataGenerator()
     
-    print("=" * 60)
-    print("Traffic Violation Data Generator - Sample Output")
-    print("=" * 60)
+    def export_violations_to_csv(self, violations, filename='violations_export.csv'):
+        """Export violations to CSV file"""
+        try:
+            if not violations:
+                logger.warning("No violations to export")
+                return False
+            
+            with open(filename, 'w', newline='') as f:
+                writer = csv.DictWriter(f, fieldnames=violations[0].keys())
+                writer.writeheader()
+                writer.writerows(violations)
+            logger.info(f"Exported {len(violations)} violations to {filename}")
+            return True
+        except Exception as e:
+            logger.error(f"Error exporting violations to CSV: {str(e)}")
+            return False
     
-    # Show all employees
-    print("\n--- All Employees ---")
-    for emp in generator.get_all_employees():
-        print(f"{emp['id']}: {emp['name']} ({emp['department']})")
+    def get_all_employees(self):
+        """Return all employees"""
+        return self.employees
     
-    # Generate sample violations
-    print("\n--- Sample Violations ---")
-    violations = generator.generate_batch_violations(5)
-    for v in violations:
-        if v:
-            print(f"\nViolation ID: {v['violation_id']}")
-            print(f"Employee: {v['employee_name']} ({v['employee_id']})")
-            print(f"Type: {v['violation_type']}")
-            print(f"Location: {v['location']}")
-            print(f"Severity: {v['severity']}")
-            print(f"Time: {v['timestamp']}")
-            print(f"Description: {v['description']}")
-            print("-" * 40)
+    def get_employee(self, employee_id):
+        """Get specific employee details"""
+        return next((e for e in self.employees if e.get('employee_id') == employee_id), None)
